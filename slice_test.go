@@ -462,6 +462,126 @@ func TestReverse(t *testing.T) {
 	is.IsType(nonempty, allStrings, "type preserved")
 }
 
+func TestClone(t *testing.T) {
+	t.Parallel()
+	is := assert.New(t)
+
+	// Test basic cloning
+	original := []int{1, 2, 3, 4, 5}
+	cloned := Clone(original)
+	
+	is.Equal(original, cloned)
+	is.NotSame(&original[0], &cloned[0], "should be different memory addresses")
+	
+	// Test that modifying clone doesn't affect original
+	cloned[0] = 999
+	is.Equal(original[0], 1, "original should be unchanged")
+	is.Equal(cloned[0], 999, "clone should be changed")
+	
+	// Test empty slice
+	emptyOriginal := []int{}
+	emptyCloned := Clone(emptyOriginal)
+	is.Equal(emptyOriginal, emptyCloned)
+	
+	// Test nil slice
+	var nilSlice []int
+	nilCloned := Clone(nilSlice)
+	is.Nil(nilCloned)
+}
+
+func TestShuffleImmutable(t *testing.T) {
+	t.Parallel()
+	is := assert.New(t)
+
+	// Test that Shuffle doesn't modify the original slice
+	original := []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
+	originalCopy := make([]int, len(original))
+	copy(originalCopy, original)
+	
+	shuffled := Shuffle(original)
+	
+	// Original should remain unchanged
+	is.Equal(original, originalCopy, "original slice should not be modified")
+	
+	// Shuffled should be different (with very high probability)
+	// Note: there's a tiny chance they could be the same, but extremely unlikely
+	is.NotEqual(shuffled, original)
+	
+	// Both should have same length and same elements (just different order)
+	is.Equal(len(shuffled), len(original))
+}
+
+func TestReverseImmutable(t *testing.T) {
+	t.Parallel()
+	is := assert.New(t)
+
+	// Test that Reverse doesn't modify the original slice
+	original := []int{1, 2, 3, 4, 5}
+	originalCopy := make([]int, len(original))
+	copy(originalCopy, original)
+	
+	reversed := Reverse(original)
+	
+	// Original should remain unchanged
+	is.Equal(original, originalCopy, "original slice should not be modified")
+	
+	// Reversed should be different
+	is.Equal(reversed, []int{5, 4, 3, 2, 1})
+}
+
+func TestMapSame(t *testing.T) {
+	t.Parallel()
+	is := assert.New(t)
+
+	// Test basic functionality
+	result := MapSame([]int{1, 2, 3, 4}, func(x int) int {
+		return x * 2
+	})
+	is.Equal(result, []int{2, 4, 6, 8})
+	
+	// Test that original slice is not modified
+	original := []int{1, 2, 3}
+	originalCopy := make([]int, len(original))
+	copy(originalCopy, original)
+	
+	MapSame(original, func(x int) int {
+		return x * 10
+	})
+	
+	is.Equal(original, originalCopy, "original slice should not be modified")
+	
+	// Test with custom slice type
+	type myInts []int
+	originalCustom := myInts{1, 2, 3}
+	resultCustom := MapSame(originalCustom, func(x int) int {
+		return x + 1
+	})
+	is.IsType(resultCustom, originalCustom, "type preserved")
+	is.Equal(resultCustom, myInts{2, 3, 4})
+}
+
+func TestMapSameI(t *testing.T) {
+	t.Parallel()
+	is := assert.New(t)
+
+	// Test with index functionality
+	result := MapSameI([]int{10, 20, 30}, func(x int, i int) int {
+		return x + i
+	})
+	is.Equal(result, []int{10, 21, 32})
+	
+	// Test that original slice is not modified
+	original := []int{1, 2, 3}
+	originalCopy := make([]int, len(original))
+	copy(originalCopy, original)
+	
+	MapSameI(original, func(x int, i int) int {
+		return x * i
+	})
+	
+	is.Equal(original, originalCopy, "original slice should not be modified")
+}
+
 func TestFill(t *testing.T) {
 	t.Parallel()
 	is := assert.New(t)

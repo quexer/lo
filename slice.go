@@ -7,6 +7,11 @@ import (
 	"github.com/samber/lo/mutable"
 )
 
+// Clone returns a shallow copy of the collection.
+func Clone[T any](collection []T) []T {
+	return append(collection[:0:0], collection...)
+}
+
 // Filter iterates over elements of collection, returning an array of all elements predicate returns truthy for.
 // Play: https://go.dev/play/p/Apjg3WeSi7K
 func Filter[T any, Slice ~[]T](collection Slice, predicate func(item T, index int) bool) Slice {
@@ -25,6 +30,31 @@ func Filter[T any, Slice ~[]T](collection Slice, predicate func(item T, index in
 // Play: https://go.dev/play/p/OkPcYAhBo0D
 func Map[T any, R any](collection []T, iteratee func(item T, index int) R) []R {
 	result := make([]R, len(collection))
+
+	for i := range collection {
+		result[i] = iteratee(collection[i], i)
+	}
+
+	return result
+}
+
+// MapSame manipulates a slice and transforms it to a slice of the same type.
+// This is the immutable version of mutable.Map.
+func MapSame[T any, Slice ~[]T](collection Slice, iteratee func(item T) T) Slice {
+	result := make(Slice, len(collection))
+
+	for i := range collection {
+		result[i] = iteratee(collection[i])
+	}
+
+	return result
+}
+
+// MapSameI manipulates a slice and transforms it to a slice of the same type.
+// The iteratee function receives both the item and its index.
+// This is the immutable version of mutable.MapI.
+func MapSameI[T any, Slice ~[]T](collection Slice, iteratee func(item T, index int) T) Slice {
+	result := make(Slice, len(collection))
 
 	for i := range collection {
 		result[i] = iteratee(collection[i], i)
@@ -315,20 +345,20 @@ func Interleave[T any, Slice ~[]T](collections ...Slice) Slice {
 
 // Shuffle returns an array of shuffled values. Uses the Fisher-Yates shuffle algorithm.
 // Play: https://go.dev/play/p/ZTGG7OUCdnp
-//
-// Deprecated: use mutable.Shuffle() instead.
 func Shuffle[T any, Slice ~[]T](collection Slice) Slice {
-	mutable.Shuffle(collection)
-	return collection
+	result := make(Slice, len(collection))
+	copy(result, collection)
+	mutable.Shuffle(result)
+	return result
 }
 
 // Reverse reverses array so that the first element becomes the last, the second element becomes the second to last, and so on.
 // Play: https://go.dev/play/p/iv2e9jslfBM
-//
-// Deprecated: use mutable.Reverse() instead.
 func Reverse[T any, Slice ~[]T](collection Slice) Slice {
-	mutable.Reverse(collection)
-	return collection
+	result := make(Slice, len(collection))
+	copy(result, collection)
+	mutable.Reverse(result)
+	return result
 }
 
 // Fill fills elements of array with `initial` value.
